@@ -1,0 +1,157 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Browser Memory Comparison</title>
+<style>
+:root{color-scheme:light;--bg:#f5f5f3;--surface:#fcfcfb;--ink:#0b0b0b;--ink2:#52514e;--muted:#8a8984;
+--grid:#e4e3df;--bar:#2a78d6;--tick:#0b0b0b;
+--s1:#2a78d6;--s2:#eb6834;--s3:#1baf7a;--s4:#eda100;--s5:#e87ba4;--s6:#008300;--s7:#6250d6;--s8:#e34948}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){color-scheme:dark;--bg:#111110;--surface:#1a1a19;
+--ink:#f0efec;--ink2:#c3c2b7;--muted:#8d8c86;--grid:#2c2c2a;--bar:#3987e5;--tick:#f0efec;
+--s1:#3987e5;--s2:#d95926;--s3:#199e70;--s4:#c98500;--s5:#d55181;--s6:#008300;--s7:#9085e9;--s8:#e66767}}
+:root[data-theme="dark"]{color-scheme:dark;--bg:#111110;--surface:#1a1a19;--ink:#f0efec;--ink2:#c3c2b7;--muted:#8d8c86;
+--grid:#2c2c2a;--bar:#3987e5;--tick:#f0efec;--s1:#3987e5;--s2:#d95926;--s3:#199e70;--s4:#c98500;--s5:#d55181;
+--s6:#008300;--s7:#9085e9;--s8:#e66767}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.5 system-ui,-apple-system,"Segoe UI",sans-serif}
+main{max-width:960px;margin:0 auto;padding:32px 16px 64px}
+h1{font-size:26px;margin:0 0 4px;letter-spacing:-.01em}
+h2{font-size:17px;margin:0 0 4px}
+.sub{color:var(--ink2);margin:0 0 24px}
+.card{background:var(--surface);border:1px solid var(--grid);border-radius:12px;padding:20px;margin-bottom:20px}
+.note{color:var(--ink2);font-size:13px;margin:4px 0 14px}
+.hero{display:flex;gap:28px;flex-wrap:wrap}
+.hero div b{display:block;font-size:28px;font-variant-numeric:tabular-nums}
+.hero div span{color:var(--ink2);font-size:13px}
+svg{display:block;width:100%;height:auto;overflow:visible}
+svg text{fill:var(--ink2);font-size:12px}
+.legend{display:flex;gap:16px;flex-wrap:wrap;font-size:13px;color:var(--ink2);margin-bottom:8px}
+.legend i{display:inline-block;width:12px;height:12px;border-radius:3px;margin-right:6px;vertical-align:-1px}
+.legend i.tick{width:3px;height:14px;border-radius:1px;background:var(--tick)}
+table{width:100%;border-collapse:collapse;font-variant-numeric:tabular-nums;font-size:14px}
+th,td{text-align:right;padding:7px 8px;border-bottom:1px solid var(--grid)}
+th:nth-child(-n+2),td:nth-child(-n+2){text-align:left}
+th{color:var(--ink2);font-weight:600;font-size:13px}
+td small{color:var(--muted)}
+.scroll{overflow-x:auto}
+#tip{position:fixed;pointer-events:none;background:var(--surface);border:1px solid var(--grid);border-radius:8px;
+padding:8px 10px;font-size:13px;box-shadow:0 4px 16px rgba(0,0,0,.15);opacity:0;transition:opacity .1s;z-index:9;color:var(--ink)}
+ul{margin:6px 0 0;padding-left:20px;color:var(--ink2);font-size:13px}
+</style></head><body><main>
+<h1>Browser memory with 10 tabs</h1>
+<p class="sub" id="sub"></p>
+<div class="card"><div class="hero" id="hero"></div></div>
+<div class="card">
+<h2>Memory after idle (lower is better)</h2>
+<p class="note">Total PSS of all browser processes. Bar = mean after idle; line = range across runs; tick = mean right after load.</p>
+<div class="legend"><span><i style="background:var(--bar)"></i>After idle</span><span><i class="tick"></i>After load</span></div>
+<svg id="bars"></svg></div>
+<div class="card">
+<h2>Memory over time</h2>
+<p class="note">Run with the median idle value for each browser. Dashed line marks the end of the load phase.</p>
+<div class="legend" id="tlLegend"></div>
+<svg id="timeline"></svg></div>
+<div class="card"><h2>All numbers</h2>
+<div class="scroll"><table id="tbl"></table></div></div>
+<div class="card"><h2>How this was measured</h2><ul id="method"></ul></div>
+</main><div id="tip"></div>
+<script>
+const D = {"rows": [{"name": "Chromium", "version": "Chromium 156.0.8078.79 Arch Linux", "blocker": "uBlock Origin Lite 2026.1103.1743", "runs": 3, "loaded": {"mean": 1125.6, "min": 1120.6, "max": 1131.8}, "idle": {"mean": 975.3, "min": 950.2, "max": 990.8}, "peak": {"mean": 1315.0, "min": 1284.7, "max": 1335.8}, "procs": 20, "tabs": 10}, {"name": "Helium", "version": "Helium 0.21.1.1 (Chromium 157.0.8103.38)", "blocker": "built-in uBlock Origin", "runs": 3, "loaded": {"mean": 1155.7, "min": 1142.2, "max": 1168.2}, "idle": {"mean": 1004.9, "min": 976.7, "max": 1047.3}, "peak": {"mean": 1414.8, "min": 1378.8, "max": 1457.8}, "procs": 22, "tabs": 10}, {"name": "Brave", "version": "Brave Browser 157.1.99.55", "blocker": "Brave Shields", "runs": 2, "loaded": {"mean": 1128.4, "min": 1122.5, "max": 1134.3}, "idle": {"mean": 1022.9, "min": 1009.0, "max": 1036.7}, "peak": {"mean": 1353.4, "min": 1349.0, "max": 1357.8}, "procs": 21, "tabs": 10}, {"name": "Chrome", "version": "Google Chrome 157.0.8103.38", "blocker": "uBlock Origin Lite 2026.1103.1743", "runs": 3, "loaded": {"mean": 1196.5, "min": 1193.4, "max": 1199.5}, "idle": {"mean": 1050.1, "min": 1029.1, "max": 1073.0}, "peak": {"mean": 1444.9, "min": 1433.9, "max": 1450.4}, "procs": 23, "tabs": 10}, {"name": "Vivaldi", "version": "Vivaldi 8.3.4191.30 stable", "blocker": "uBlock Origin Lite 2026.1103.1743", "runs": 3, "loaded": {"mean": 1323.6, "min": 1314.2, "max": 1331.8}, "idle": {"mean": 1159.4, "min": 1105.4, "max": 1194.6}, "peak": {"mean": 1559.3, "min": 1551.8, "max": 1563.8}, "procs": 25, "tabs": 10}, {"name": "Zen", "version": "Mozilla Zen 1.24.1b", "blocker": "uBlock Origin 1.75.4", "runs": 3, "loaded": {"mean": 2199.5, "min": 2100.0, "max": 2392.9}, "idle": {"mean": 1924.8, "min": 1895.8, "max": 1957.8}, "peak": {"mean": 3088.5, "min": 2892.5, "max": 3236.1}, "procs": 22, "tabs": null}, {"name": "Firefox", "version": "Mozilla Firefox 159.0.1", "blocker": "uBlock Origin 1.75.4", "runs": 3, "loaded": {"mean": 2581.6, "min": 2474.3, "max": 2721.5}, "idle": {"mean": 2388.6, "min": 2318.0, "max": 2504.6}, "peak": {"mean": 3362.2, "min": 3161.1, "max": 3609.9}, "procs": 22, "tabs": null}], "order": ["Firefox", "Zen", "Chrome", "Chromium", "Brave", "Vivaldi", "Helium"], "timeline": {"Firefox": [[0.0, 60.4], [5.0, 2590.0], [10.0, 3609.9], [15.0, 3193.9], [20.0, 3005.1], [25.0, 2679.5], [30.0, 2624.2], [35.0, 2592.2], [40.0, 2576.4], [45.0, 2567.5], [50.0, 2549.6], [55.0, 2546.8], [60.0, 2548.4], [65.0, 2434.1], [70.0, 2435.5], [75.0, 2955.6], [80.0, 2659.6], [85.0, 2630.7], [90.0, 2631.4], [95.0, 2634.0], [100.0, 2634.7], [107.0, 2633.4], [110.0, 2633.5], [115.0, 2676.5], [120.0, 2676.7], [125.0, 2671.3], [130.0, 2672.3], [135.0, 2673.5], [140.0, 2675.0], [145.0, 2385.8], [150.0, 2336.1], [155.0, 2342.5], [160.0, 2344.0], [165.0, 2343.4], [170.0, 2343.1], [175.0, 2383.5]], "Zen": [[0.0, 27.6], [5.0, 2165.6], [10.0, 3136.8], [15.0, 2945.4], [20.0, 2585.3], [25.0, 2254.5], [30.0, 2176.7], [35.0, 2153.8], [40.0, 2122.5], [45.0, 2108.7], [50.0, 2101.7], [55.0, 2096.2], [60.0, 2098.2], [65.0, 1965.9], [70.0, 1955.6], [75.0, 2533.7], [80.0, 2232.6], [85.0, 2206.4], [90.0, 2210.1], [95.0, 2216.3], [100.0, 2211.3], [105.0, 2209.8], [110.0, 2210.8], [115.0, 2247.5], [120.0, 2252.0], [125.0, 2248.3], [130.0, 2250.2], [135.0, 1959.1], [140.0, 1960.2], [145.0, 1914.2], [150.0, 1911.9], [155.0, 1920.1], [160.0, 1921.8], [165.0, 1919.7], [170.0, 1921.5], [175.0, 1963.8]], "Chrome": [[0.0, 399.9], [5.0, 1433.9], [10.0, 1429.4], [15.0, 1423.7], [20.0, 1393.2], [25.0, 1395.8], [30.0, 1357.2], [35.0, 1206.8], [40.0, 1195.0], [45.0, 1197.8], [50.0, 1199.0], [55.0, 1204.4], [60.0, 1200.1], [65.0, 1190.4], [70.0, 1191.2], [75.0, 1132.9], [80.0, 1136.9], [85.0, 1140.6], [90.0, 1141.3], [95.0, 1120.6], [100.0, 1107.5], [105.0, 1104.3], [110.0, 1104.5], [115.0, 1047.3], [120.0, 1054.8], [125.0, 1051.1], [130.0, 1051.0], [135.0, 1055.9], [140.0, 1015.9], [145.0, 1068.4], [150.0, 1059.9], [155.0, 1055.2], [160.0, 1049.2], [165.0, 1046.9], [170.0, 1047.0], [175.0, 1031.6]], "Chromium": [[0.0, 368.5], [5.0, 1242.9], [10.0, 1284.7], [15.0, 1259.5], [20.0, 1268.8], [25.0, 1269.8], [30.0, 1249.7], [35.0, 1123.6], [40.0, 1118.8], [45.0, 1119.1], [50.0, 1122.0], [55.0, 1123.4], [60.0, 1119.3], [65.0, 1103.1], [70.0, 1110.0], [75.0, 1075.4], [80.0, 1064.7], [85.0, 1051.3], [90.0, 1004.9], [95.0, 993.8], [100.0, 992.2], [105.0, 985.9], [110.0, 988.4], [115.0, 952.1], [120.0, 943.0], [125.0, 945.5], [130.0, 945.5], [135.0, 941.9], [140.0, 1005.3], [145.0, 1003.8], [150.0, 1003.3], [155.0, 997.2], [160.0, 983.7], [165.0, 985.9], [170.0, 974.0], [175.0, 941.8]], "Brave": [[0.0, 296.8], [5.0, 1334.6], [10.0, 1349.0], [15.0, 1317.1], [20.0, 1330.8], [25.0, 1332.2], [30.0, 1322.6], [35.0, 1126.7], [40.0, 1118.4], [45.0, 1118.6], [50.0, 1122.8], [55.0, 1124.7], [60.0, 1122.3], [65.0, 1108.1], [70.0, 1116.7], [75.0, 1081.2], [80.0, 1071.6], [85.0, 1056.3], [90.0, 1058.1], [95.0, 1034.8], [100.0, 1030.6], [105.0, 1016.6], [110.0, 1023.1], [115.0, 1014.7], [120.0, 982.1], [125.0, 983.5], [130.0, 983.8], [135.0, 984.3], [140.0, 1051.4], [145.0, 1051.7], [150.0, 1051.5], [155.0, 1052.0], [160.0, 1036.6], [165.0, 1036.9], [170.0, 1024.1], [175.0, 1022.2]], "Vivaldi": [[0.0, 519.2], [5.0, 1474.5], [10.0, 1563.8], [15.0, 1532.5], [20.0, 1546.3], [25.0, 1545.0], [30.0, 1474.4], [35.0, 1333.4], [40.0, 1327.5], [45.0, 1327.7], [50.0, 1329.3], [55.0, 1322.0], [60.0, 1307.6], [65.0, 1316.3], [70.0, 1316.7], [75.0, 1275.0], [80.0, 1263.5], [85.0, 1248.4], [90.0, 1252.2], [95.0, 1224.4], [100.0, 1224.6], [105.0, 1215.6], [110.0, 1219.7], [115.0, 1206.9], [120.0, 1156.1], [125.0, 1158.8], [130.0, 1160.2], [135.0, 1162.2], [140.0, 1162.4], [145.0, 1228.9], [150.0, 1231.9], [155.0, 1181.3], [160.0, 1184.3], [165.0, 1171.4], [170.0, 1172.7], [175.0, 1174.9]], "Helium": [[0.0, 217.2], [5.0, 1260.4], [10.0, 1325.5], [15.0, 1343.3], [20.0, 1327.1], [25.0, 1336.9], [30.0, 1378.8], [35.0, 1123.4], [40.0, 1108.5], [45.0, 1116.8], [50.0, 1118.1], [55.0, 1166.3], [60.0, 1230.1], [65.0, 1110.3], [70.0, 1109.8], [75.0, 1062.5], [80.0, 1055.3], [85.0, 1050.4], [90.0, 1039.0], [95.0, 1017.0], [100.0, 1013.0], [105.0, 1014.5], [110.0, 972.3], [115.0, 992.5], [120.0, 949.6], [125.0, 938.9], [130.0, 934.5], [135.0, 935.7], [140.0, 939.3], [145.0, 996.2], [150.0, 995.7], [155.0, 992.2], [160.0, 992.3], [165.0, 989.0], [170.0, 982.1], [175.0, 988.8]]}, "config": {"runs": 3, "load": 60, "idle": 120, "only": null}, "urls": ["https://mail.google.com/", "https://outlook.live.com/mail/", "https://web.whatsapp.com/", "https://www.youtube.com/watch?v=aqz-KE-bpKQ", "https://github.com/torvalds/linux", "https://github.com/microsoft/vscode/pulls", "https://github.com/microsoft/vscode/issues", "https://www.timeanddate.com/worldclock/", "https://www.xe.com/currencyconverter/", "https://en.wikipedia.org/wiki/Web_browser"], "when": "2026-11-08 15:15"};
+const $ = id => document.getElementById(id);
+const NS = "http://www.w3.org/2000/svg";
+const el = (tag, attrs, parent) => { const e = document.createElementNS(NS, tag);
+  for (const k in attrs) e.setAttribute(k, attrs[k]); parent && parent.appendChild(e); return e; };
+const fmt = mb => mb >= 1024 ? (mb/1024).toFixed(2) + " GB" : Math.round(mb) + " MB";
+const tip = $("tip");
+const showTip = (ev, html) => { tip.innerHTML = html; tip.style.opacity = 1;
+  const x = Math.min(ev.clientX + 14, innerWidth - tip.offsetWidth - 8);
+  tip.style.left = x + "px"; tip.style.top = (ev.clientY + 14) + "px"; };
+const hideTip = () => tip.style.opacity = 0;
+
+const rows = D.rows.filter(r => !r.failed);
+$("sub").textContent = `${D.config.runs} runs per browser · ${D.config.load}s load + ${D.config.idle}s idle · ${D.when}`;
+
+// hero
+const best = rows[0], worst = rows[rows.length - 1];
+$("hero").innerHTML = rows.length ? `
+  <div><b>${best.name}</b><span>lightest · ${fmt(best.idle.mean)} after idle</span></div>
+  <div><b>${worst.name}</b><span>heaviest · ${fmt(worst.idle.mean)}</span></div>
+  <div><b>${(worst.idle.mean / best.idle.mean).toFixed(1)}×</b><span>heaviest vs lightest</span></div>` : "No successful runs.";
+
+// bar chart
+(() => {
+  const svg = $("bars"), W = 900, rowH = 34, L = 150, R = 70, T = 8;
+  const H = T + rows.length * rowH + 28;
+  svg.setAttribute("viewBox", `0 0 ${W} ${H}`);
+  const max = Math.max(...rows.map(r => Math.max(r.idle.max, r.loaded.mean))) * 1.05;
+  const x = v => L + (W - L - R) * v / max;
+  const step = max > 4000 ? 1000 : max > 2000 ? 500 : 250;
+  for (let v = 0; v <= max; v += step) {
+    el("line", {x1: x(v), x2: x(v), y1: T, y2: H - 22, stroke: "var(--grid)"}, svg);
+    el("text", {x: x(v), y: H - 6, "text-anchor": "middle"}, svg).textContent = v >= 1000 ? (v/1000) + "k" : v;
+  }
+  rows.forEach((r, i) => {
+    const y = T + i * rowH, cy = y + rowH / 2, bh = 18;
+    const g = el("g", {}, svg);
+    const n = el("text", {x: L - 12, y: cy + 4, "text-anchor": "end", style: "fill:var(--ink);font-size:13px"}, g);
+    n.textContent = r.name;
+    el("text", {x: L - 12, y: cy + 17, "text-anchor": "end", style: "font-size:10px;fill:var(--muted)"}, g).textContent = r.blocker;
+    const w = x(r.idle.mean) - L;
+    el("path", {d: `M${L},${cy-bh/2} h${w-4} a4,4 0 0 1 4,4 v${bh-8} a4,4 0 0 1 -4,4 h${-(w-4)} z`, fill: "var(--bar)"}, g);
+    el("line", {x1: x(r.idle.min), x2: x(r.idle.max), y1: cy, y2: cy, stroke: "var(--tick)", "stroke-width": 1.5, opacity: .55}, g);
+    el("rect", {x: x(r.loaded.mean) - 1.5, y: cy - bh/2 - 3, width: 3, height: bh + 6, rx: 1, fill: "var(--tick)"}, g);
+    el("text", {x: Math.max(x(r.idle.max), x(r.loaded.mean)) + 8, y: cy + 4, style: "fill:var(--ink);font-size:12px"}, g).textContent = fmt(r.idle.mean);
+    const hit = el("rect", {x: 0, y, width: W, height: rowH, fill: "transparent"}, g);
+    hit.addEventListener("mousemove", ev => showTip(ev, `<b>${r.name}</b><br>After idle: ${fmt(r.idle.mean)} <small>(${fmt(r.idle.min)}–${fmt(r.idle.max)})</small><br>After load: ${fmt(r.loaded.mean)}<br>Peak: ${fmt(r.peak.mean)}<br>${r.procs} processes · ${r.blocker}`));
+    hit.addEventListener("mouseleave", hideTip);
+  });
+})();
+
+// timeline
+(() => {
+  const svg = $("timeline"), W = 900, H = 320, L = 50, R = 16, T = 10, B = 28;
+  svg.setAttribute("viewBox", `0 0 ${W} ${H}`);
+  const order = D.order;  // fixed browser order -> fixed colors
+  const series = order.map((name, i) => ({name, color: `var(--s${i + 1})`, s: D.timeline[name] || []})).filter(s => s.s.length);
+  $("tlLegend").innerHTML = series.map(s => `<span><i style="background:${s.color}"></i>${s.name}</span>`).join("");
+  const tmax = Math.max(...series.flatMap(s => s.s.map(p => p[0])));
+  const vmax = Math.max(...series.flatMap(s => s.s.map(p => p[1]))) * 1.08;
+  const x = t => L + (W - L - R) * t / tmax, y = v => T + (H - T - B) * (1 - v / vmax);
+  const step = vmax > 4000 ? 1000 : vmax > 2000 ? 500 : 250;
+  for (let v = 0; v <= vmax; v += step) {
+    el("line", {x1: L, x2: W - R, y1: y(v), y2: y(v), stroke: "var(--grid)"}, svg);
+    el("text", {x: L - 8, y: y(v) + 4, "text-anchor": "end"}, svg).textContent = v >= 1000 ? (v/1000) + "k" : v;
+  }
+  for (let t = 0; t <= tmax; t += 30) el("text", {x: x(t), y: H - 8, "text-anchor": "middle"}, svg).textContent = t + "s";
+  el("line", {x1: x(D.config.load), x2: x(D.config.load), y1: T, y2: H - B, stroke: "var(--muted)", "stroke-dasharray": "4 4"}, svg);
+  series.forEach(s => el("polyline", {points: s.s.map(p => `${x(p[0])},${y(p[1])}`).join(" "), fill: "none",
+    stroke: s.color, "stroke-width": 2, "stroke-linejoin": "round"}, svg));
+  const cross = el("line", {y1: T, y2: H - B, stroke: "var(--muted)", opacity: 0}, svg);
+  const hit = el("rect", {x: L, y: T, width: W - L - R, height: H - T - B, fill: "transparent"}, svg);
+  hit.addEventListener("mousemove", ev => {
+    const pt = svg.createSVGPoint(); pt.x = ev.clientX; pt.y = ev.clientY;
+    const p = pt.matrixTransform(svg.getScreenCTM().inverse());
+    const t = (p.x - L) / (W - L - R) * tmax;
+    cross.setAttribute("x1", p.x); cross.setAttribute("x2", p.x); cross.setAttribute("opacity", 1);
+    const vals = series.map(s => { const q = s.s.reduce((a, b) => Math.abs(b[0] - t) < Math.abs(a[0] - t) ? b : a);
+      return {name: s.name, color: s.color, v: q[1]}; }).sort((a, b) => b.v - a.v);
+    showTip(ev, `<b>${Math.round(t)}s</b><br>` + vals.map(v => `<i style="display:inline-block;width:8px;height:8px;border-radius:2px;background:${v.color};margin-right:6px"></i>${v.name}: ${fmt(v.v)}`).join("<br>"));
+  });
+  hit.addEventListener("mouseleave", () => { hideTip(); cross.setAttribute("opacity", 0); });
+})();
+
+// table
+$("tbl").innerHTML = `<tr><th>#</th><th>Browser</th><th>After load</th><th>After idle</th><th>Idle range</th><th>Peak</th><th>Procs</th><th>Tabs</th></tr>` +
+  D.rows.map((r, i) => r.failed ? `<tr><td>${i+1}</td><td>${r.name}</td><td colspan="6">failed</td></tr>` :
+  `<tr><td>${i+1}</td><td>${r.name}<br><small>${r.version} · ${r.blocker}</small></td><td>${fmt(r.loaded.mean)}</td><td><b>${fmt(r.idle.mean)}</b></td>
+   <td>${fmt(r.idle.min)}–${fmt(r.idle.max)}</td><td>${fmt(r.peak.mean)}</td><td>${r.procs}</td><td>${r.tabs ?? "–"}</td></tr>`).join("");
+
+$("method").innerHTML = [
+  "Same 10 tabs in every browser, logged out: " + D.urls.map(u => new URL(u).hostname.replace(/^www\./, "")).join(", ") + ".",
+  "Each run uses a fresh throwaway profile; your own profiles are never touched.",
+  "Each browser runs in its own systemd scope (cgroup), so all its processes are counted and nothing else is.",
+  "Memory = PSS (proportional set size): shared pages are split between the processes that share them, so nothing is double-counted.",
+  "Firefox and Zen use full uBlock Origin; Chrome, Chromium and Vivaldi use uBlock Origin Lite (Chrome no longer runs the full version); Brave uses Shields; Helium uses its built-in uBlock Origin.",
+  "Runs are interleaved across browsers to spread out network and system noise.",
+].map(s => `<li>${s}</li>`).join("");
+</script></body></html>

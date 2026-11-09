@@ -1,0 +1,163 @@
+[
+ {
+  "name": "Chromium",
+  "version": "Chromium 156.0.8078.79 Arch Linux",
+  "blocker": "uBlock Origin Lite 2026.1103.1743",
+  "runs": 3,
+  "loaded": {
+   "mean": 1125.6,
+   "min": 1120.6,
+   "max": 1131.8
+  },
+  "idle": {
+   "mean": 975.3,
+   "min": 950.2,
+   "max": 990.8
+  },
+  "peak": {
+   "mean": 1315.0,
+   "min": 1284.7,
+   "max": 1335.8
+  },
+  "procs": 20,
+  "tabs": 10
+ },
+ {
+  "name": "Helium",
+  "version": "Helium 0.21.1.1 (Chromium 157.0.8103.38)",
+  "blocker": "built-in uBlock Origin",
+  "runs": 3,
+  "loaded": {
+   "mean": 1155.7,
+   "min": 1142.2,
+   "max": 1168.2
+  },
+  "idle": {
+   "mean": 1004.9,
+   "min": 976.7,
+   "max": 1047.3
+  },
+  "peak": {
+   "mean": 1414.8,
+   "min": 1378.8,
+   "max": 1457.8
+  },
+  "procs": 22,
+  "tabs": 10
+ },
+ {
+  "name": "Brave",
+  "version": "Brave Browser 157.1.99.55",
+  "blocker": "Brave Shields",
+  "runs": 2,
+  "loaded": {
+   "mean": 1128.4,
+   "min": 1122.5,
+   "max": 1134.3
+  },
+  "idle": {
+   "mean": 1022.9,
+   "min": 1009.0,
+   "max": 1036.7
+  },
+  "peak": {
+   "mean": 1353.4,
+   "min": 1349.0,
+   "max": 1357.8
+  },
+  "procs": 21,
+  "tabs": 10
+ },
+ {
+  "name": "Chrome",
+  "version": "Google Chrome 157.0.8103.38",
+  "blocker": "uBlock Origin Lite 2026.1103.1743",
+  "runs": 3,
+  "loaded": {
+   "mean": 1196.5,
+   "min": 1193.4,
+   "max": 1199.5
+  },
+  "idle": {
+   "mean": 1050.1,
+   "min": 1029.1,
+   "max": 1073.0
+  },
+  "peak": {
+   "mean": 1444.9,
+   "min": 1433.9,
+   "max": 1450.4
+  },
+  "procs": 23,
+  "tabs": 10
+ },
+ {
+  "name": "Vivaldi",
+  "version": "Vivaldi 8.3.4191.30 stable",
+  "blocker": "uBlock Origin Lite 2026.1103.1743",
+  "runs": 3,
+  "loaded": {
+   "mean": 1323.6,
+   "min": 1314.2,
+   "max": 1331.8
+  },
+  "idle": {
+   "mean": 1159.4,
+   "min": 1105.4,
+   "max": 1194.6
+  },
+  "peak": {
+   "mean": 1559.3,
+   "min": 1551.8,
+   "max": 1563.8
+  },
+  "procs": 25,
+  "tabs": 10
+ },
+ {
+  "name": "Zen",
+  "version": "Mozilla Zen 1.24.1b",
+  "blocker": "uBlock Origin 1.75.4",
+  "runs": 3,
+  "loaded": {
+   "mean": 2199.5,
+   "min": 2100.0,
+   "max": 2392.9
+  },
+  "idle": {
+   "mean": 1924.8,
+   "min": 1895.8,
+   "max": 1957.8
+  },
+  "peak": {
+   "mean": 3088.5,
+   "min": 2892.5,
+   "max": 3236.1
+  },
+  "procs": 22,
+  "tabs": null
+ },
+ {
+  "name": "Firefox",
+  "version": "Mozilla Firefox 159.0.1",
+  "blocker": "uBlock Origin 1.75.4",
+  "runs": 3,
+  "loaded": {
+   "mean": 2581.6,
+   "min": 2474.3,
+   "max": 2721.5
+  },
+  "idle": {
+   "mean": 2388.6,
+   "min": 2318.0,
+   "max": 2504.6
+  },
+  "peak": {
+   "mean": 3362.2,
+   "min": 3161.1,
+   "max": 3609.9
+  },
+  "procs": 22,
+  "tabs": null
+ }
+]
